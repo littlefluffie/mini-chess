@@ -28,12 +28,10 @@ function toIndex(notation) {
     return (rank * 8 + (files.indexOf(file)));
 }
 
-function movePiece(move) {
-    var piece_index = toIndex(move.slice(0, 2));
-    var move_index = toIndex(move.slice(2));
+function movePiece(piece_index, square_index) {
     var piece = pieces[piece_index];
     pieces[piece_index] = "0";
-    pieces[move_index] = piece;
+    pieces[square_index] = piece;
     return displayBoard();
 }
 

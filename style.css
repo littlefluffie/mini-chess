@@ -25,3 +25,7 @@ table {
 .highlight {
     background-color: hotpink;
 }
+
+.selected {
+    border: black 2px
+}
