@@ -1,0 +1,29 @@
+<?DOCTYPE html>
+
+<html>
+
+    <head>
+        <script src="chess.js" type="text/javascript"></script>
+         <script src="main.js" type="text/javascript"></script>
+         <link rel="stylesheet" href="style.css">
+    </head>
+
+    <body>
+        <div class="chess_table">
+            <table id="chess_board"></table>
+        </div>
+        <input type="text" id="move">
+        <button onclick="makeMove()" type="button">Move</button><br>
+        <input type="text" id="check">
+        <button onclick="checkMove()" type="button">Check moves</button>
+
+        
+    </body>
+    
+        <script>
+            (function() {
+                init();
+            })();
+        </script>
+
+</html>
