@@ -96,15 +96,9 @@ function getPossibleMoves(index) {
 
             case "r":
             case "R":
-                var vectors = [
-                    { dx: 1, dy: 0 },
-                    { dx: -1, dy: 0 },
-                    { dx: 0, dy: 1 },
-                    { dx: 0, dy: -1 }
-                ];
-                for (var i = 0; i < vectors.length; i++) {
-                    var dx = vectors[i].dx;
-                    var dy = vectors[i].dy;
+                for (var i = 0; i < 4; i++) {
+                    var dx = Math.cos(Math.PI / 2 * i);
+                    var dy = Math.sin(Math.PI / 2 * i);
                     vector(9);
                 }
                 break;
