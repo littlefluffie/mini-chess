@@ -31,5 +31,6 @@ td.highlight:hover {
 }
 
 .selected {
+    background-color: mediumpurple;
     border: black 2px
 }

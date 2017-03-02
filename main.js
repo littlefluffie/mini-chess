@@ -76,43 +76,43 @@ function init() {
 }
 
 function selectSquare(square) {
+    clearSelected();
     var square_id = parseInt(this.id);
+    if (color(chess_pieces[square_id]) === turn) {
+        var selected = document.getElementById(square_id);
+        if (selected) selected.classList.add("selected");
+    }
+
     if (selected_piece) {
-        var moves = getPossibleMoves(selected_piece);
+        var moves = getPossibleMoves(chess_pieces, selected_piece);
 
         if (moves.indexOf(square_id) > -1) {
-            movePiece(selected_piece, square_id);
-            selected_piece = null;
-            turn = 1 - turn;
-            clearHighlights();
-            updateBoard();
+            if (movePiece(selected_piece, square_id)) {
+                selected_piece = null;
+                turn = 1 - turn;
+                clearHighlights();
+                updateBoard();
+            } else {
+                alert("You will be in check!");
+                selected_piece = null;
+                clearHighlights();
+            }
         } else {
             selected_piece = null;
             clearHighlights();
         }
     } else {
-        if (pieces[square_id] !== "0" && color(pieces[square_id]) === turn) {
+        if (chess_pieces[square_id] !== "0" && color(chess_pieces[square_id]) === turn) {
             selected_piece = square_id;
             checkMove(selected_piece);
         }
     }
 }
 
-function makeMove() {
-    var textbox = document.getElementById("move");
-    var move = textbox.value;
-    var piece_index = toIndex(move.slice(0, 2));
-    var square_index = toIndex(move.slice(2));
-
-    if (move) movePiece(piece_index, square_index);
-    textbox.value = null;
-    updateBoard();
-}
-
 function checkMove(piece) {
     clearHighlights();
     console.log("Piece " + piece);
-    var moves = (piece) ? getPossibleMoves(piece) : getPossibleMoves(toIndex(document.getElementById("check").value));
+    var moves = (piece) ? getPossibleMoves(chess_pieces, piece) : getPossibleMoves(chess_pieces, toIndex(document.getElementById("check").value));
     console.log("Moves: " + moves);
     moves.forEach(function(move) {
         var square = document.getElementById(move);
@@ -121,17 +121,25 @@ function checkMove(piece) {
 }
 
 function updateBoard() {
-    for (var i = 0; i < pieces.length; i++) {
+    for (var i = 0; i < chess_pieces.length; i++) {
         var square = document.getElementById(i);
-        if (square) square.innerHTML = (pieces[i] !== "0") ? chess_set[pieces[i]] : square.innerHTML = null;
+        if (square) square.innerHTML = (chess_pieces[i] !== "0") ? chess_set[chess_pieces[i]] : square.innerHTML = null;
     }
     clearHighlights();
+    clearSelected();
 }
 
 function clearHighlights() {
-    for (var i = 0; i < pieces.length; i++) {
+    for (var i = 0; i < chess_pieces.length; i++) {
         var square = document.getElementById(i);
         if (square) square.classList.remove("highlight");
+    }
+}
+
+function clearSelected() {
+    for (var i = 0; i < chess_pieces.length; i++) {
+        var square = document.getElementById(i);
+        if (square) square.classList.remove("selected");
     }
 }
 

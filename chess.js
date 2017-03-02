@@ -1,8 +1,11 @@
+const WHITE = 0;
+const BLACK = 1;
+
 var board = "1010101001010101101010100101010110101010010101011010101001010101";
 var default_pieces = "RNBQKBNROOOOOOOO00000000000000000000000000000000oooooooornbqkbnr";
-// var default_pieces = "000000000000000000000000000n000000000000000000000000000000000000";
+// var default_pieces = "RNBQKBNROOOOOOOO00000000Q00Q000Q0000Q0000Q000000oooooooornbqkbnr";
 
-var pieces = Array.from(default_pieces);
+var chess_pieces = Array.from(default_pieces);
 var files = "abcdefgh";
 var white = "kqrbnopz";
 var black = "KQRBNOPZ";
@@ -34,33 +37,37 @@ function toIndex(notation) {
 }
 
 function movePiece(piece_index, square_index) {
-    pieces = pieces.map(function(a) {
+    var check_pieces = chess_pieces.slice(0);
+
+    check_pieces = check_pieces.map(function(a) {
         if ((a === "z") || (a === "Z")) return "0";
         else return a;
     });
 
-    var piece = pieces[piece_index];
-    pieces[piece_index] = "0";
+    var piece = check_pieces[piece_index];
+    check_pieces[piece_index] = "0";
     if (piece === "o" || piece === "O") {
-        pieces[square_index] = (piece === "o") ? "p" : "P";
-        pieces[square_index - (-1 + 2 * color(piece)) * 8] = (piece === "o") ? "z" : "Z";
+        check_pieces[square_index] = (piece === "o") ? "p" : "P";
+        check_pieces[square_index - (-1 + 2 * color(piece)) * 8] = (piece === "o") ? "z" : "Z";
     } else {
-        pieces[square_index] = piece;
+        check_pieces[square_index] = piece;
     }
-
-    return displayBoard();
+    if (inCheck(check_pieces, turn)) {
+        return false;
+    } else {
+        chess_pieces = check_pieces;
+        return true;
+    }
 }
 
 function color(piece) {
-    if (white.includes(piece)) return 0;
-    if (black.includes(piece)) return 1;
+    if (white.includes(piece)) return WHITE;
+    if (black.includes(piece)) return BLACK;
     return -1;
 }
 
-function getPossibleMoves(index) {
-
+function getPossibleMoves(pieces, index) {
     var moves = [];
-
     var piece = pieces[index];
     var row = Math.floor(index / 8);
     var column = index % 8;
@@ -187,17 +194,30 @@ function getPossibleMoves(index) {
     }
 }
 
+function inCheck(pieces, check_color) {
+    var opposite_pieces = pieces.map(function(piece, index) {
+        if (check_color === WHITE) {
+            if (black.includes(piece)) return index;
+            else return 0;
+        } else {
+            if (white.includes(piece)) return index;
+            else return 0;
+        }
+    }).filter(function(piece) {
+        return (piece !== 0)
+    });
+    var king_index = pieces.indexOf(check_color === WHITE ? "k" : "K");
+    for (var i = 0; i < opposite_pieces.length; i++) {
+        var moves = getPossibleMoves(pieces, opposite_pieces[i]);
+        if (moves.indexOf(king_index) > -1) {
+            return true;
+        }
+    }
+    return false;
+}
+
 
 // Optional functions
-
-function displayBoard() {
-    var output = "";
-    for (var i = 0; i < pieces.length; i++) {
-        output += (pieces[i] !== "0") ? chess_set[pieces[i]] : board[i];
-        if ((i + 1) % 8 === 0 && i !== pieces.length) output += "\n";
-    }
-    return output;
-}
 
 function generateBoard() {
     var board = "";
