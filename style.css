@@ -26,6 +26,10 @@ table {
     background-color: hotpink;
 }
 
+td.highlight:hover {
+    background-color: mediumvioletred;
+}
+
 .selected {
     border: black 2px
 }
