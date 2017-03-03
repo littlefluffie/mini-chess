@@ -2,8 +2,8 @@ const WHITE = 0;
 const BLACK = 1;
 
 var board = "1010101001010101101010100101010110101010010101011010101001010101";
-var default_pieces = "RNBQKBNROOOOOOOO00000000000000000000000000000000oooooooornbqkbnr";
-// var default_pieces = "RNBQKBNROOOOOOOO00000000Q00Q000Q0000Q0000Q000000oooooooornbqkbnr";
+// var default_pieces = "RNBQKBNROOOOOOOO00000000000000000000000000000000oooooooornbqkbnr";
+var default_pieces = "RNBQKBNROOOOOOOO00ppp000Q00Q000Q0000Q0000Q000000oooooooornbqkbnr";
 
 var chess_pieces = Array.from(default_pieces);
 var files = "abcdefgh";
@@ -18,7 +18,7 @@ var chess_set = {
     "n": String.fromCharCode(9816),
     "o": String.fromCharCode(9817), // Initial pawn
     "p": String.fromCharCode(9817), // Moved pawn
-    "z": "", // En Passant
+    "z": "*", // En Passant
 
     "K": String.fromCharCode(9818),
     "Q": String.fromCharCode(9819),
@@ -27,35 +27,47 @@ var chess_set = {
     "N": String.fromCharCode(9822),
     "O": String.fromCharCode(9823), // Initial pawn
     "P": String.fromCharCode(9823), // Moved pawn
-    "Z": "" // En Passant
+    "Z": "*" // En Passant
 }
 
-function toIndex(notation) {
-    var file = notation[0];
-    var rank = 8 - parseInt(notation[1]);
+function toIndex(square) {
+    var file = square[0];
+    var rank = 8 - parseInt(square[1]);
     return (rank * 8 + (files.indexOf(file)));
+}
+
+function toSquare(index) {
+    var row = Math.floor(index / 8);
+    var column = index % 8;
+    return (files[row] + column);
 }
 
 function movePiece(piece_index, square_index) {
     var check_pieces = chess_pieces.slice(0);
+    var piece = check_pieces[piece_index];
+    var square = check_pieces[square_index];
+
+    if ("pPoO".includes(piece) && "zZ".includes(square)) check_pieces[square_index + (1 - 2 * color(piece)) * 8] = "0";
 
     check_pieces = check_pieces.map(function(a) {
         if ((a === "z") || (a === "Z")) return "0";
         else return a;
     });
 
-    var piece = check_pieces[piece_index];
     check_pieces[piece_index] = "0";
     if (piece === "o" || piece === "O") {
         check_pieces[square_index] = (piece === "o") ? "p" : "P";
-        check_pieces[square_index - (-1 + 2 * color(piece)) * 8] = (piece === "o") ? "z" : "Z";
+        if (Math.abs(Math.floor(piece_index / 8) - Math.floor(square_index / 8)) > 1) {
+            check_pieces[square_index - (-1 + 2 * color(piece)) * 8] = (piece === "o") ? "z" : "Z";
+        }
     } else {
         check_pieces[square_index] = piece;
     }
+
     if (inCheck(check_pieces, turn)) {
         return false;
     } else {
-        chess_pieces = check_pieces;
+        chess_pieces = check_pieces.slice(0);
         return true;
     }
 }
@@ -81,7 +93,6 @@ function getPossibleMoves(pieces, index) {
                     else moves.push(move);
                 } else if ((pieces[move] === "z" || pieces[move] === "Z") && color(piece) === 1 - color(pieces[move])) {
                     moves.push(move);
-                    pieces[move + (1 - 2 * color(piece)) * 8] = "0";
                 } else {
                     if (capture && color(piece) === 1 - color(pieces[move])) moves.push(move);
                     return;
@@ -194,26 +205,35 @@ function getPossibleMoves(pieces, index) {
     }
 }
 
+/**
+ * inCheck
+ * Checks the board state to determine whether the player is in check and returns an array of indexes of threatening pieces. Returns null if not in check.
+ * @param pieces {Array} The set of pieces that needs to be checked.
+ * @param check_color {number} The turn of the played to be checked.
+ */
 function inCheck(pieces, check_color) {
+    var checked_by = [];
     var opposite_pieces = pieces.map(function(piece, index) {
         if (check_color === WHITE) {
             if (black.includes(piece)) return index;
-            else return 0;
+            else return -1;
         } else {
             if (white.includes(piece)) return index;
-            else return 0;
+            else return -1;
         }
-    }).filter(function(piece) {
-        return (piece !== 0)
+    })
+
+    opposite_pieces = opposite_pieces.filter(function(piece) {
+        return (piece !== -1)
     });
     var king_index = pieces.indexOf(check_color === WHITE ? "k" : "K");
     for (var i = 0; i < opposite_pieces.length; i++) {
         var moves = getPossibleMoves(pieces, opposite_pieces[i]);
         if (moves.indexOf(king_index) > -1) {
-            return true;
+            checked_by.push(i);
         }
     }
-    return false;
+    return (checked_by.length > 0) ? checked_by : null;
 }
 
 

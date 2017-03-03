@@ -143,5 +143,12 @@ function clearSelected() {
     }
 }
 
+function checkPieces() {
+    alert(JSON.stringify(chess_pieces));
+    var row = Math.floor(index / 8);
+    var column = index % 8;
+
+}
+
 
 console.log("Started");
