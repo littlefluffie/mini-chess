@@ -2,8 +2,8 @@ const WHITE = 0;
 const BLACK = 1;
 
 var board = "1010101001010101101010100101010110101010010101011010101001010101";
-// var default_pieces = "RNBQKBNROOOOOOOO00000000000000000000000000000000oooooooornbqkbnr";
-var default_pieces = "RNBQKBNROOOOOOOO00ppp000Q00Q000Q0000Q0000Q000000oooooooornbqkbnr";
+var default_pieces = "RNBQKBNROOOOOOOO00000000000000000000000000000000oooooooornbqkbnr";
+// var default_pieces = "RNBQKBNROOOOOOOO00ppp000Q00Q000Q0000Q0000Q000000oooooooornbqkbnr";
 
 var chess_pieces = Array.from(default_pieces);
 var files = "abcdefgh";
@@ -18,7 +18,7 @@ var chess_set = {
     "n": String.fromCharCode(9816),
     "o": String.fromCharCode(9817), // Initial pawn
     "p": String.fromCharCode(9817), // Moved pawn
-    "z": "*", // En Passant
+    "z": "", // En Passant
 
     "K": String.fromCharCode(9818),
     "Q": String.fromCharCode(9819),
@@ -27,7 +27,7 @@ var chess_set = {
     "N": String.fromCharCode(9822),
     "O": String.fromCharCode(9823), // Initial pawn
     "P": String.fromCharCode(9823), // Moved pawn
-    "Z": "*" // En Passant
+    "Z": "" // En Passant
 }
 
 function toIndex(square) {
@@ -43,32 +43,33 @@ function toSquare(index) {
 }
 
 function movePiece(piece_index, square_index) {
-    var check_pieces = chess_pieces.slice(0);
-    var piece = check_pieces[piece_index];
-    var square = check_pieces[square_index];
+    var move_pieces = chess_pieces.slice(0);
+    var piece = move_pieces[piece_index];
+    var square = move_pieces[square_index];
 
-    if ("pPoO".includes(piece) && "zZ".includes(square)) check_pieces[square_index + (1 - 2 * color(piece)) * 8] = "0";
+    if ("pPoO".includes(piece) && "zZ".includes(square)) move_pieces[square_index + (1 - 2 * color(piece)) * 8] = "0";
 
-    check_pieces = check_pieces.map(function(a) {
+    move_pieces = move_pieces.map(function(a) {
         if ((a === "z") || (a === "Z")) return "0";
         else return a;
     });
 
-    check_pieces[piece_index] = "0";
+    move_pieces[piece_index] = "0";
     if (piece === "o" || piece === "O") {
-        check_pieces[square_index] = (piece === "o") ? "p" : "P";
+        move_pieces[square_index] = (piece === "o") ? "p" : "P";
         if (Math.abs(Math.floor(piece_index / 8) - Math.floor(square_index / 8)) > 1) {
-            check_pieces[square_index - (-1 + 2 * color(piece)) * 8] = (piece === "o") ? "z" : "Z";
+            move_pieces[square_index - (-1 + 2 * color(piece)) * 8] = (piece === "o") ? "z" : "Z";
         }
     } else {
-        check_pieces[square_index] = piece;
+        move_pieces[square_index] = piece;
     }
 
-    if (inCheck(check_pieces, turn)) {
-        return false;
+    var check = inCheck(move_pieces, turn);
+    if (check !== null) {
+        return [false, check];
     } else {
-        chess_pieces = check_pieces.slice(0);
-        return true;
+        chess_pieces = move_pieces.slice(0);
+        return [true, null];
     }
 }
 
@@ -103,6 +104,23 @@ function getPossibleMoves(pieces, index) {
         }
     }
 
+    function jump(distance, capture) {
+        var n = distance;
+        var a = Math.round(dy * n);
+        var b = Math.round(dx * n);
+        if (row + a >= 0 && row + a < 8 && column + b >= 0 && column + b < 8 && (a !== 0 && b !== 0)) {
+            var move = Math.round((row + a) * 8 + column + b);
+            if (pieces[move] === "0") {
+                moves.push(move);
+            } else {
+                if (capture && color(piece) === 1 - color(pieces[move])) moves.push(move);
+                return;
+            }
+        } else {
+            return;
+        }
+    }
+
     if (piece !== "0") {
         switch (piece) {
             case "k":
@@ -134,6 +152,11 @@ function getPossibleMoves(pieces, index) {
 
             case "n":
             case "N":
+                // for (var i = 0; i < 12; i++) {
+                //     var dx = Math.cos(Math.PI / 6 * i);
+                //     var dy = Math.sin(Math.PI / 6 * i);
+                //     jump(Math.sqrt(5), true);
+                // }
                 for (var i = -2; i < 3; i++) {
                     if (i !== 0 && row + i >= 0 && row + i < 8 && column + 3 - Math.abs(i) >= 0 && column + 3 - Math.abs(i) < 8) {
                         var move = (row + i) * 8 + column + (3 - Math.abs(i));

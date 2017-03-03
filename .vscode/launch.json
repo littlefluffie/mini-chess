@@ -6,13 +6,13 @@
             "name": "Launch Chrome against localhost",
             "url": "${workspaceRoot}/chess.html",
             "webRoot": "${workspaceRoot}/chess.html"
+        },
+        {
+            "type": "chrome",
+            "request": "attach",
+            "name": "Attach to Chrome",
+            "port": 9222,
+            "webRoot": "${workspaceRoot}"
         }
-        // {
-        //     "type": "chrome",
-        //     "request": "attach",
-        //     "name": "Attach to Chrome",
-        //     "port": 9222,
-        //     "webRoot": "${workspaceRoot}"
-        // }
     ]
 }

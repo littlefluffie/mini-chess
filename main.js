@@ -87,14 +87,15 @@ function selectSquare(square) {
         var moves = getPossibleMoves(chess_pieces, selected_piece);
 
         if (moves.indexOf(square_id) > -1) {
-            if (movePiece(selected_piece, square_id)) {
+            var [success, check] = movePiece(selected_piece, square_id);
+            if (success) {
                 selected_piece = null;
                 turn = 1 - turn;
+                if (inCheck(chess_pieces, turn) !== null) alert("Check");
                 clearHighlights();
                 updateBoard();
             } else {
-                alert("You will be in check!");
-                selected_piece = null;
+                alert("You cannot move into check");
                 clearHighlights();
             }
         } else {
@@ -145,9 +146,6 @@ function clearSelected() {
 
 function checkPieces() {
     alert(JSON.stringify(chess_pieces));
-    var row = Math.floor(index / 8);
-    var column = index % 8;
-
 }
 
 
