@@ -112,9 +112,7 @@ function selectSquare(square) {
 
 function checkMove(piece) {
     clearHighlights();
-    console.log("Piece " + piece);
-    var moves = (piece) ? getPossibleMoves(chess_pieces, piece) : getPossibleMoves(chess_pieces, toIndex(document.getElementById("check").value));
-    console.log("Moves: " + moves);
+    var moves = getPossibleMoves(chess_pieces, piece);
     moves.forEach(function(move) {
         var square = document.getElementById(move);
         if (square) square.classList.add("highlight");

@@ -2,27 +2,32 @@ const WHITE = 0;
 const BLACK = 1;
 
 var board = "1010101001010101101010100101010110101010010101011010101001010101";
-var default_pieces = "RNBQKBNROOOOOOOO00000000000000000000000000000000oooooooornbqkbnr";
-// var default_pieces = "RNBQKBNROOOOOOOO00ppp000Q00Q000Q0000Q0000Q000000oooooooornbqkbnr";
+var default_pieces = "RNBQXBNROOOOOOOO00000000000000000000000000000000oooooooornbqxbnr";
+var default_pieces = "RNBQX00ROOOOOOOO00000000000000000000000000000000oooooooornbqxbnr";
 
 var chess_pieces = Array.from(default_pieces);
+
 var files = "abcdefgh";
-var white = "kqrbnopz";
-var black = "KQRBNOPZ";
+var white = "kxqrcbnopz";
+var black = "KXQRCBNOPZ";
 
 var chess_set = {
-    "k": String.fromCharCode(9812),
+    "k": String.fromCharCode(9812), // Moved king
+    "x": String.fromCharCode(9812), // Non moved king
     "q": String.fromCharCode(9813),
-    "r": String.fromCharCode(9814),
+    "r": String.fromCharCode(9814), // Moved rook
+    "c": String.fromCharCode(9814), // Unmoved rook
     "b": String.fromCharCode(9815),
     "n": String.fromCharCode(9816),
     "o": String.fromCharCode(9817), // Initial pawn
     "p": String.fromCharCode(9817), // Moved pawn
     "z": "", // En Passant
 
-    "K": String.fromCharCode(9818),
+    "K": String.fromCharCode(9818), // Moved king
+    "X": String.fromCharCode(9818), // Non moved king
     "Q": String.fromCharCode(9819),
-    "R": String.fromCharCode(9820),
+    "R": String.fromCharCode(9820), // Moved rook
+    "C": String.fromCharCode(9820), // Unmoved rook
     "B": String.fromCharCode(9821),
     "N": String.fromCharCode(9822),
     "O": String.fromCharCode(9823), // Initial pawn
@@ -30,18 +35,41 @@ var chess_set = {
     "Z": "" // En Passant
 }
 
+function ChessGame() {
+    this.chess_pieces = Array.from(default_pieces);
+    this.turn = WHITE;
+
+    return this;
+}
+
+/**
+ * toIndex(square)
+ * Returns the index of the square
+ * @param square {string} - The algebraic coordinates of the square (e.g. d4) 
+ */
 function toIndex(square) {
     var file = square[0];
     var rank = 8 - parseInt(square[1]);
     return (rank * 8 + (files.indexOf(file)));
 }
 
+/**
+ * toSquare(index)
+ * Converts the index to an algebraic notation text.
+ * @param index {number} - The index of the square.
+ */
 function toSquare(index) {
     var row = Math.floor(index / 8);
     var column = index % 8;
     return (files[row] + column);
 }
 
+/**
+ * movePiece(piece_index, square_index)
+ * Moves the piece to the destination square, checks if the move doesn't result in check, then returns true.
+ * @param piece_index {number} - The index of the piece to be moved.
+ * @param square_index {number} - The index of the destination square.
+ */
 function movePiece(piece_index, square_index) {
     var move_pieces = chess_pieces.slice(0);
     var piece = move_pieces[piece_index];
@@ -60,6 +88,14 @@ function movePiece(piece_index, square_index) {
         if (Math.abs(Math.floor(piece_index / 8) - Math.floor(square_index / 8)) > 1) {
             move_pieces[square_index - (-1 + 2 * color(piece)) * 8] = (piece === "o") ? "z" : "Z";
         }
+    } else if (piece === "x" || piece === "X") {
+        move_pieces[square_index] = (piece === "x") ? "k" : "K";
+        if (Math.abs(Math.floor(piece_index % 8) - Math.floor(square_index % 8)) > 1) {
+            move_pieces[(piece_index > square_index) ? piece_index - 1 : piece_index + 1] = (piece === "x") ? "r" : "R";
+            move_pieces[(piece_index > square_index) ? piece_index - 4 : piece_index + 3] = "0"
+        }
+    } else if (piece === "c" || piece === "C") {
+        move_pieces[square_index] = (piece === "c") ? "r" : "R";
     } else {
         move_pieces[square_index] = piece;
     }
@@ -73,12 +109,23 @@ function movePiece(piece_index, square_index) {
     }
 }
 
+/**
+ * color(piece)
+ * Returns the color of the piece
+ * @param piece {string} - The string value of the piece
+ */
 function color(piece) {
     if (white.includes(piece)) return WHITE;
     if (black.includes(piece)) return BLACK;
     return -1;
 }
 
+/**
+ * getPossibleMoves(pieces, index)
+ * Returns an array of indexes of all the possible moves for the specified piece on the board state given in the array.
+ * @param pieces {array} - The board array being checked.
+ * @param index {number} - The index of the pieces being checked.
+ */
 function getPossibleMoves(pieces, index) {
     var moves = [];
     var piece = pieces[index];
@@ -132,6 +179,23 @@ function getPossibleMoves(pieces, index) {
                 }
                 break;
 
+            case "x":
+            case "X":
+                for (var dx = -1; dx < 2; dx++) {
+                    for (var dy = -1; dy < 2; dy++) {
+                        vector(1, true);
+                    }
+                }
+                if (chess_pieces[index - 4] === (turn === WHITE) ? "c" : "C") {
+                    var [dx, dy] = [-2, 0];
+                    vector(2, false);
+                }
+                if (chess_pieces[index + 3] === (turn === WHITE) ? "c" : "C") {
+                    var [dx, dy] = [2, 0];
+                    vector(2, false);
+                }
+                break;
+
             case "q":
             case "Q":
                 for (var dx = -1; dx < 2; dx++) {
@@ -143,9 +207,11 @@ function getPossibleMoves(pieces, index) {
 
             case "r":
             case "R":
+            case "c":
+            case "C":
                 for (var i = 0; i < 4; i++) {
-                    var dx = Math.cos(Math.PI / 2 * i);
-                    var dy = Math.sin(Math.PI / 2 * i);
+                    var dx = Math.floor(Math.cos(Math.PI / 2 * i));
+                    var dy = Math.floor(Math.sin(Math.PI / 2 * i));
                     vector(8, true);
                 }
                 break;
