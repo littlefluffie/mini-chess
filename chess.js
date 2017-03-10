@@ -2,8 +2,8 @@ const WHITE = 0;
 const BLACK = 1;
 
 var board = "1010101001010101101010100101010110101010010101011010101001010101";
-var default_pieces = "RNBQXBNROOOOOOOO00000000000000000000000000000000oooooooornbqxbnr";
-// var default_pieces = "RNBQX00ROOOOOOOO00000000000000000000000000000000oooooooornbqxbnr";
+// var default_pieces = "RNBQXBNROOOOOOOO00000000000000000000000000000000oooooooornbqxbnr";
+var default_pieces = "RNBQX00ROOOOOOOO00000000000000000000000000000000oooooooornbqxbnr";
 
 var chess_pieces = Array.from(default_pieces);
 
@@ -107,12 +107,22 @@ function color(piece) {
     return -1;
 }
 
+/**
+ * opposite_color(piece)
+ * Returns the opposite color of the piece
+ * @param piece {string} - The string value of the piece
+ */
 function opposite_color(piece) {
     if (white.includes(piece)) return BLACK;
     if (black.includes(piece)) return WHITE;
     return -1;
 }
 
+/**
+ * color_direction(piece)
+ * Returns the direction towards which the piece is facing relative to the board
+ * @param piece {string} - The piece in question
+ */
 function color_direction(piece) {
     if (white.includes(piece)) return -1;
     if (black.includes(piece)) return 1;
@@ -209,8 +219,8 @@ function getPossibleMoves(pieces, index) {
             case "c":
             case "C":
                 for (var i = 0; i < 4; i++) {
-                    var dx = Math.floor(Math.cos(Math.PI / 2 * i));
-                    var dy = Math.floor(Math.sin(Math.PI / 2 * i));
+                    var dx = Math.round(Math.cos(Math.PI / 2 * i));
+                    var dy = Math.round(Math.sin(Math.PI / 2 * i));
                     vector(8, true);
                 }
                 break;
@@ -273,7 +283,7 @@ function getPossibleMoves(pieces, index) {
             case "P":
                 var i = -1 + 2 * color(piece);
                 var dx = 0;
-                var dy = Math.floor(Math.sin(Math.PI / 2 * i));
+                var dy = Math.round(Math.sin(Math.PI / 2 * i));
                 vector(1, false);
 
                 var dy = i;
