@@ -3,7 +3,7 @@ const BLACK = 1;
 
 var board = "1010101001010101101010100101010110101010010101011010101001010101";
 var default_pieces = "RNBQXBNROOOOOOOO00000000000000000000000000000000oooooooornbqxbnr";
-var default_pieces = "RNBQX00ROOOOOOOO00000000000000000000000000000000oooooooornbqxbnr";
+// var default_pieces = "RNBQX00ROOOOOOOO00000000000000000000000000000000oooooooornbqxbnr";
 
 var chess_pieces = Array.from(default_pieces);
 
@@ -35,13 +35,6 @@ var chess_set = {
     "Z": "" // En Passant
 }
 
-function ChessGame() {
-    this.chess_pieces = Array.from(default_pieces);
-    this.turn = WHITE;
-
-    return this;
-}
-
 /**
  * toIndex(square)
  * Returns the index of the square
@@ -70,8 +63,8 @@ function toSquare(index) {
  * @param piece_index {number} - The index of the piece to be moved.
  * @param square_index {number} - The index of the destination square.
  */
-function movePiece(piece_index, square_index) {
-    var move_pieces = chess_pieces.slice(0);
+function movePiece(piece_index, square_index, pieces) {
+    var move_pieces = pieces.slice(0);
     var piece = move_pieces[piece_index];
     var square = move_pieces[square_index];
 
@@ -100,13 +93,7 @@ function movePiece(piece_index, square_index) {
         move_pieces[square_index] = piece;
     }
 
-    var check = inCheck(move_pieces, turn);
-    if (check !== null) {
-        return [false, check];
-    } else {
-        chess_pieces = move_pieces.slice(0);
-        return [true, null];
-    }
+    return move_pieces;
 }
 
 /**
@@ -118,6 +105,18 @@ function color(piece) {
     if (white.includes(piece)) return WHITE;
     if (black.includes(piece)) return BLACK;
     return -1;
+}
+
+function opposite_color(piece) {
+    if (white.includes(piece)) return BLACK;
+    if (black.includes(piece)) return WHITE;
+    return -1;
+}
+
+function color_direction(piece) {
+    if (white.includes(piece)) return -1;
+    if (black.includes(piece)) return 1;
+    return 0;
 }
 
 /**
@@ -291,16 +290,43 @@ function getPossibleMoves(pieces, index) {
         }
 
         return moves;
+
     }
 }
 
 /**
- * inCheck
+ * inCheck(pieces, check_color)
  * Checks the board state to determine whether the player is in check and returns an array of indexes of threatening pieces. Returns null if not in check.
  * @param pieces {Array} The set of pieces that needs to be checked.
  * @param check_color {number} The turn of the played to be checked.
  */
 function inCheck(pieces, check_color) {
+    var opposite_pieces = pieces.map(function(piece, index) {
+        if (check_color === WHITE) {
+            if (black.includes(piece)) return index;
+            else return -1;
+        } else {
+            if (white.includes(piece)) return index;
+            else return -1;
+        }
+    });
+
+    opposite_pieces = opposite_pieces.filter(function(piece) {
+        return (piece !== -1)
+    });
+    var king_index = pieces.indexOf(check_color === WHITE ? "x" : "X");
+    if (king_index === -1) king_index = pieces.indexOf(check_color === WHITE ? "k" : "K");
+
+    for (var i = 0; i < opposite_pieces.length; i++) {
+        var moves = getPossibleMoves(pieces, opposite_pieces[i]);
+        if (moves.indexOf(king_index) > -1) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function checkedBy(pieces, check_color) {
     var checked_by = [];
     var opposite_pieces = pieces.map(function(piece, index) {
         if (check_color === WHITE) {
@@ -310,19 +336,63 @@ function inCheck(pieces, check_color) {
             if (white.includes(piece)) return index;
             else return -1;
         }
-    })
+    });
 
     opposite_pieces = opposite_pieces.filter(function(piece) {
         return (piece !== -1)
     });
-    var king_index = pieces.indexOf(check_color === WHITE ? "k" : "K");
+    var king_index = pieces.indexOf(check_color === WHITE ? "x" : "X");
+    if (king_index === -1) king_index = pieces.indexOf(check_color === WHITE ? "k" : "K");
+
     for (var i = 0; i < opposite_pieces.length; i++) {
         var moves = getPossibleMoves(pieces, opposite_pieces[i]);
         if (moves.indexOf(king_index) > -1) {
             checked_by.push(i);
         }
     }
-    return (checked_by.length > 0) ? checked_by : null;
+    return checked_by;
+}
+
+/**
+ * inMate(pieces, mate_color)
+ * Checks whether the player is in mate.
+ * @param pieces {array} - An array containing the board setup to check for mate.
+ * @param mate_color {number} - The color to check for mate.
+ */
+function inMate(pieces, mate_color) {
+    var king_index = pieces.indexOf(mate_color === WHITE ? "x" : "X");
+    if (king_index === -1) king_index = pieces.indexOf(mate_color === WHITE ? "k" : "K");
+
+    var same_pieces = pieces.map(function(piece, index) {
+        if (piece !== (mate_color === WHITE ? "k" : "K")) {
+            if (mate_color === WHITE) {
+                if (white.includes(piece)) return index;
+                else return -1;
+            } else {
+                if (black.includes(piece)) return index;
+                else return -1;
+            }
+        } else {
+            return -1;
+        }
+    });
+
+    // Check whether the king can move out of danger
+    var king_moves = getPossibleMoves(pieces, king_index);
+    for (var i = 0; i < king_moves.length; i++) {
+        if (!inCheck(movePiece(king_index, king_moves[i], pieces))) return false;
+    }
+
+    // Check if other pieces can prevent check
+    for (var i = 0; i < same_pieces; i++) {
+        var piece = same_pieces[i];
+        var piece_moves = getPossibleMoves(pieces, piece);
+        for (var j = 0; j < piece_moves.length; j++) {
+            if (!inCheck(movePiece(piece, piece_moves[i], pieces))) return false;
+        }
+    }
+
+    return true;
 }
 
 

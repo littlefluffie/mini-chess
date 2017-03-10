@@ -87,13 +87,17 @@ function selectSquare(square) {
         var moves = getPossibleMoves(chess_pieces, selected_piece);
 
         if (moves.indexOf(square_id) > -1) {
-            var [success, check] = movePiece(selected_piece, square_id);
-            if (success) {
+            var moved_pieces = movePiece(selected_piece, square_id, chess_pieces);
+            if (!inCheck(moved_pieces, turn)) {
+                chess_pieces = moved_pieces.slice(0);
                 selected_piece = null;
                 turn = 1 - turn;
-                if (inCheck(chess_pieces, turn) !== null) alert("Check");
                 clearHighlights();
                 updateBoard();
+                if (inCheck(chess_pieces, turn)) {
+                    if (inMate(chess_pieces, turn)) alert("Checkmate");
+                    else alert("Check");
+                }
             } else {
                 alert("You cannot move into check");
                 clearHighlights();
@@ -143,7 +147,22 @@ function clearSelected() {
 }
 
 function checkPieces() {
-    alert(JSON.stringify(chess_pieces));
+    var checked = false;
+
+    (function check() {
+        if (checked !== true) {
+            for (var i = 0; i < chess_pieces.length; i++) {
+                var square = document.getElementById(i);
+                if (square) square.innerHTML = chess_pieces[i];
+            }
+            clearHighlights();
+            clearSelected();
+            checked = true;
+        } else {
+            checked = false;
+            updateBoard();
+        }
+    })();
 }
 
 
