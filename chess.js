@@ -2,8 +2,8 @@ const WHITE = 0;
 const BLACK = 1;
 
 var board = "1010101001010101101010100101010110101010010101011010101001010101";
-// var default_pieces = "RNBQXBNROOOOOOOO00000000000000000000000000000000oooooooornbqxbnr";
-var default_pieces = "RNBQX00ROOOOOOOO00000000000000000000000000000000oooooooornbqxbnr";
+var default_pieces = "RNBQXBNROOOOOOOO00000000000000000000000000000000oooooooornbqxbnr";
+// var default_pieces = "RNBQX00ROOOOOOOO00000000000000000000000000000000oooooooornbqxbnr";
 
 var chess_pieces = Array.from(default_pieces);
 
@@ -390,15 +390,16 @@ function inMate(pieces, mate_color) {
     // Check whether the king can move out of danger
     var king_moves = getPossibleMoves(pieces, king_index);
     for (var i = 0; i < king_moves.length; i++) {
-        if (!inCheck(movePiece(king_index, king_moves[i], pieces))) return false;
+        if (!inCheck(movePiece(king_index, king_moves[i], pieces), mate_color)) return false;
     }
 
     // Check if other pieces can prevent check
-    for (var i = 0; i < same_pieces; i++) {
+    for (var i = 0; i < same_pieces.length; i++) {
         var piece = same_pieces[i];
         var piece_moves = getPossibleMoves(pieces, piece);
         for (var j = 0; j < piece_moves.length; j++) {
-            if (!inCheck(movePiece(piece, piece_moves[i], pieces))) return false;
+            var move = movePiece(piece, piece_moves[j], pieces);
+            if (!inCheck(move, mate_color)) return false;
         }
     }
 
