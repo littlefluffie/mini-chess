@@ -2,8 +2,8 @@ const WHITE = 0;
 const BLACK = 1;
 
 var board = "1010101001010101101010100101010110101010010101011010101001010101";
-// var default_pieces = "RNBQXBNROOOOOOOO00000000000000000000000000000000oooooooornbqxbnr";
-var default_pieces = "RNBQX00ROOOOOOOO00000000000000000000000000000000oooooooornbqxbnr";
+var default_pieces = "RNBQXBNROOOOOOOO00000000000000000000000000000000oooooooornbqxbnr";
+// var default_pieces = "RNBQX00ROOOOOOOO00000000000000000000000000000000oooooooornbqxbnr";
 
 var chess_pieces = Array.from(default_pieces);
 
@@ -141,9 +141,13 @@ function getPossibleMoves(pieces, index) {
     var row = Math.floor(index / 8);
     var column = index % 8;
 
+    function inbounds(a, b) {
+        return (row + a >= 0 && row + a < 8 && column + b >= 0 && column + b < 8);
+    }
+
     function vector(distance, capture) {
         for (var n = 1; n < distance + 1; n++) {
-            if (row + (dy * n) >= 0 && row + (dy * n) < 8 && column + (dx * n) >= 0 && column + (dx * n) < 8) {
+            if (inbounds(dy * n, dx * n)) {
                 var move = (row + (dy * n)) * 8 + column + (dx * n);
                 if (pieces[move] === "0") {
                     if ("pPoO".includes(piece) && capture) return;
@@ -164,7 +168,7 @@ function getPossibleMoves(pieces, index) {
         var n = distance;
         var a = Math.round(dy * n);
         var b = Math.round(dx * n);
-        if (row + a >= 0 && row + a < 8 && column + b >= 0 && column + b < 8 && (a !== 0 && b !== 0)) {
+        if (inbounds(a, b)) {
             var move = Math.round((row + a) * 8 + column + b);
             if (pieces[move] === "0") {
                 moves.push(move);
@@ -336,6 +340,12 @@ function inCheck(pieces, check_color) {
     return false;
 }
 
+/**
+ * checkBy(pieces, check_color)
+ * Returns 
+ * @param pieces {array} - The array of pieces to be checked.
+ * @param check_color {integer} - The color to be checked.
+ */
 function checkedBy(pieces, check_color) {
     var checked_by = [];
     var opposite_pieces = pieces.map(function(piece, index) {
@@ -390,15 +400,15 @@ function inMate(pieces, mate_color) {
     // Check whether the king can move out of danger
     var king_moves = getPossibleMoves(pieces, king_index);
     for (var i = 0; i < king_moves.length; i++) {
-        if (!inCheck(movePiece(king_index, king_moves[i], pieces))) return false;
+        if (!inCheck(movePiece(king_index, king_moves[i], pieces), mate_color)) return false;
     }
 
     // Check if other pieces can prevent check
-    for (var i = 0; i < same_pieces; i++) {
+    for (var i = 0; i < same_pieces.length; i++) {
         var piece = same_pieces[i];
         var piece_moves = getPossibleMoves(pieces, piece);
         for (var j = 0; j < piece_moves.length; j++) {
-            if (!inCheck(movePiece(piece, piece_moves[i], pieces))) return false;
+            if (!inCheck(movePiece(piece, piece_moves[j], pieces), mate_color)) return false;
         }
     }
 
